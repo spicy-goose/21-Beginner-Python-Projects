@@ -1,4 +1,5 @@
 import random
+from sqlite3 import Cursor
 from words import words
 
 def getValidWord(wordlist):
@@ -26,23 +27,58 @@ def findIndexOfDuplicates(letter, word):
         indexOfLetter += 1
     return indexes
 
-def display(numberOfLives, correctWord, currentWordGuess, allLetterArray):
-    print(f"Current number of lives: {numberOfLives}/n\
-    Letters used: {allLetterArray}/n\
-    Word: ")
+def displayCurrentScore(numberOfLives, currentWordGuess, allLetterArray):
+    print(f"Current number of lives: {numberOfLives}\
+    Letters used: {allLetterArray}\
+    Word: {currentWordGuess}")
+    print("\n") #new line for aesthetic purposes
+    return
 
 def playHangman():
     numberOfLives = 5
-    correctWord = getValidWord(words).split("")
-    currentWordGuess = ("-" * len(correctWord)).split("") #creates empty initial guess using dashes
+    selectedWord = getValidWord(words)
+    correctWord = list(selectedWord)
+    currentWordGuess = list("-" * len(correctWord)) #creates empty initial guess using dashes
     currentLetterGuess = ""
     allLetterArray = []
+    
+    print("Let's play Hangman")
+    displayCurrentScore(numberOfLives, currentWordGuess, allLetterArray)
 
     while currentWordGuess != correctWord:
-        currentLetterGuess = input("What letter is your guess? /n")
-        if (letterIsInWord(currentLetterGuess) == False):
+
+        if numberOfLives < 1:
+            break
+
+        currentLetterGuess = input("What letter is your guess? ")
+        print("\n") #new line for aesthetic purposes
+
+        if (letterIsInWord(currentLetterGuess, selectedWord) == False):
             numberOfLives -= 1
             allLetterArray.append(currentLetterGuess)
             print(f"Sorry, {currentLetterGuess} is not in the word")
+            displayCurrentScore(numberOfLives, currentWordGuess, allLetterArray)
+            continue
+        
+        elif (wordHasDuplicateLetters(currentLetterGuess, selectedWord) == False):
+            allLetterArray.append(currentLetterGuess)
+            currentWordGuess[selectedWord.find(currentLetterGuess)] = currentLetterGuess
+            print(f'Bingo! {currentLetterGuess} is correct!')
+            displayCurrentScore(numberOfLives, currentWordGuess, allLetterArray)
+            continue
 
-print(["a"] == ["a"])
+        indexes = findIndexOfDuplicates(currentLetterGuess, selectedWord)
+        for i in indexes:
+            currentWordGuess[i] = currentLetterGuess
+            
+        allLetterArray.append(currentLetterGuess)    
+        print(f'Bingo! {currentLetterGuess} is correct!')    
+        displayCurrentScore(numberOfLives, currentWordGuess, allLetterArray)
+
+    if (numberOfLives < 1):
+        print(f"Sorry, you lose. The word we were looking for is '{selectedWord}'!")
+        return
+
+    print(f"Congrats! '{selectedWord}' is the correct word!")        
+
+playHangman()
